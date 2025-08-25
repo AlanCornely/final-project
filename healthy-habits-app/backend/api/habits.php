@@ -89,10 +89,11 @@ function createHabit($pdo) {
     
     $description = $input['description'] ?? '';
     $pointsPerCompletion = $input['points_per_completion'] ?? 10;
+    $rewardDescription = $input['reward_description'] ?? '';
     
     try {
-        $stmt = $pdo->prepare("INSERT INTO habits (user_id, name, description, points_per_completion) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$input['user_id'], $input['name'], $description, $pointsPerCompletion]);
+        $stmt = $pdo->prepare("INSERT INTO habits (user_id, name, description, points_per_completion, reward_description) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$input['user_id'], $input['name'], $description, $pointsPerCompletion, $rewardDescription]);
         
         $habitId = $pdo->lastInsertId();
         jsonResponse(['id' => $habitId, 'message' => 'Hábito criado com sucesso'], 201);
@@ -124,6 +125,11 @@ function updateHabit($pdo) {
     if (isset($input['points_per_completion'])) {
         $fields[] = "points_per_completion = ?";
         $values[] = $input['points_per_completion'];
+    }
+    
+    if (isset($input['reward_description'])) {
+        $fields[] = "reward_description = ?";
+        $values[] = $input['reward_description'];
     }
     
     if (empty($fields)) {

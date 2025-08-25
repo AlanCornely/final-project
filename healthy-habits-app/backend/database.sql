@@ -12,6 +12,7 @@ CREATE TABLE habits (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     points_per_completion INT DEFAULT 10,
+    reward_description TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

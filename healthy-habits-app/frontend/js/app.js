@@ -1,6 +1,6 @@
 // Configuration
 const API_BASE_URL = 'http://localhost:8000/api';
-let currentUser = { id: 2, username: 'joao_silva', email: 'joao@email.com' }; // Simulated user
+let currentUser = null;
 
 // State management
 let appState = {
@@ -14,15 +14,187 @@ let appState = {
 // Initialize the application
 async function initializeApp() {
     try {
-        await loadUserData();
-        await loadHabits();
-        await loadBadges();
-        showSection('dashboard');
-        updateDashboard();
+        // Check if user is authenticated
+        const authCheck = await checkAuthentication();
+        if (authCheck.authenticated) {
+            currentUser = authCheck.user;
+            showMainApp();
+            await loadUserData();
+            await loadHabits();
+            await loadBadges();
+            showSection('dashboard');
+            updateDashboard();
+        } else {
+            showAuthSection();
+        }
     } catch (error) {
         console.error('Error initializing app:', error);
-        showNotification('Erro ao carregar dados da aplicação', 'error');
+        showAuthSection();
     }
+}
+
+// Authentication functions
+async function checkAuthentication() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth.php?action=check`, {
+            credentials: 'include'
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Auth check error:', error);
+        return { authenticated: false };
+    }
+}
+
+async function login(event) {
+    event.preventDefault();
+    
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth.php?action=login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            currentUser = data.user;
+            showNotification('Login realizado com sucesso!', 'success');
+            showMainApp();
+            await loadUserData();
+            await loadHabits();
+            await loadBadges();
+            showSection('dashboard');
+            updateDashboard();
+        } else {
+            showNotification(data.error || 'Erro no login', 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showNotification('Erro ao fazer login', 'error');
+    }
+}
+
+async function register(event) {
+    event.preventDefault();
+    
+    const username = document.getElementById('register-username').value;
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth.php?action=register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ username, email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            currentUser = data.user;
+            showNotification('Conta criada com sucesso!', 'success');
+            showMainApp();
+            await loadUserData();
+            await loadHabits();
+            await loadBadges();
+            showSection('dashboard');
+            updateDashboard();
+        } else {
+            showNotification(data.error || 'Erro ao criar conta', 'error');
+        }
+    } catch (error) {
+        console.error('Register error:', error);
+        showNotification('Erro ao criar conta', 'error');
+    }
+}
+
+async function logout() {
+    try {
+        await fetch(`${API_BASE_URL}/auth.php?action=logout`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        currentUser = null;
+        showNotification('Logout realizado com sucesso!', 'success');
+        showAuthSection();
+    } catch (error) {
+        console.error('Logout error:', error);
+        showNotification('Erro ao fazer logout', 'error');
+    }
+}
+
+// UI Functions
+function showAuthSection() {
+    document.getElementById('auth-section').classList.remove('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+}
+
+function showMainApp() {
+    document.getElementById('auth-section').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    updateUserDisplay();
+}
+
+function showLoginForm() {
+    document.getElementById('login-form').classList.remove('hidden');
+    document.getElementById('register-form').classList.add('hidden');
+}
+
+function showRegisterForm() {
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('register-form').classList.remove('hidden');
+}
+
+function showSection(sectionName) {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // Show selected section
+    document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+    
+    // Load section-specific data
+    if (sectionName === 'ranking') {
+        loadRanking();
+    } else if (sectionName === 'profile') {
+        loadProfile();
+    }
+}
+
+function updateUserDisplay() {
+    if (currentUser) {
+        document.getElementById('user-display').textContent = currentUser.username;
+        document.getElementById('welcome-username').textContent = currentUser.username;
+    }
+}
+
+function updateDashboard() {
+    // Update stats
+    document.getElementById('active-habits').textContent = appState.habits.length;
+    document.getElementById('user-badges').textContent = appState.badges.length;
+    
+    // Calculate today's completions
+    const today = new Date().toISOString().split('T')[0];
+    const todayCompletions = appState.completions.filter(completion => 
+        completion.completion_date.startsWith(today)
+    ).length;
+    document.getElementById('today-completions').textContent = todayCompletions;
+    
+    // Render recent activity
+    renderRecentActivity();
 }
 
 // API Functions
@@ -33,6 +205,7 @@ async function apiRequest(endpoint, options = {}) {
             'Content-Type': 'application/json',
             ...options.headers
         },
+        credentials: 'include',
         ...options
     };
 
@@ -56,7 +229,7 @@ async function loadUserData() {
     try {
         const userData = await apiRequest(`/users.php?id=${currentUser.id}`);
         appState.userStats = userData;
-        updateUserDisplay();
+        document.getElementById('user-points').textContent = userData.total_points || 0;
     } catch (error) {
         console.error('Error loading user data:', error);
     }
@@ -105,46 +278,7 @@ async function loadRanking() {
     }
 }
 
-// UI Functions
-function showSection(sectionName) {
-    // Hide all sections
-    document.querySelectorAll('.section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    
-    // Show selected section
-    document.getElementById(`${sectionName}-section`).classList.remove('hidden');
-    
-    // Load section-specific data
-    if (sectionName === 'ranking') {
-        loadRanking();
-    } else if (sectionName === 'profile') {
-        loadProfile();
-    }
-}
-
-function updateUserDisplay() {
-    if (appState.userStats) {
-        document.getElementById('user-points').textContent = appState.userStats.total_points || 0;
-    }
-}
-
-function updateDashboard() {
-    // Update stats
-    document.getElementById('active-habits').textContent = appState.habits.length;
-    document.getElementById('user-badges').textContent = appState.badges.length;
-    
-    // Calculate today's completions
-    const today = new Date().toISOString().split('T')[0];
-    const todayCompletions = appState.completions.filter(completion => 
-        completion.completion_date.startsWith(today)
-    ).length;
-    document.getElementById('today-completions').textContent = todayCompletions;
-    
-    // Render recent activity
-    renderRecentActivity();
-}
-
+// Rendering functions
 function renderHabits() {
     const habitsGrid = document.getElementById('habits-grid');
     
@@ -177,6 +311,16 @@ function renderHabits() {
             </div>
             
             <p class="text-gray-600 text-sm mb-4">${habit.description || 'Sem descrição'}</p>
+            
+            ${habit.reward_description ? `
+                <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div class="flex items-center">
+                        <i data-lucide="gift" class="h-4 w-4 text-yellow-600 mr-2"></i>
+                        <span class="text-sm text-yellow-800 font-medium">Recompensa:</span>
+                    </div>
+                    <p class="text-sm text-yellow-700 mt-1">${habit.reward_description}</p>
+                </div>
+            ` : ''}
             
             <div class="flex justify-between items-center mb-4">
                 <span class="text-sm text-gray-500">
@@ -316,6 +460,7 @@ function hideAddHabitModal() {
     document.getElementById('habit-name').value = '';
     document.getElementById('habit-description').value = '';
     document.getElementById('habit-points').value = '10';
+    document.getElementById('habit-reward').value = '';
 }
 
 // CRUD operations
@@ -326,7 +471,8 @@ async function addHabit(event) {
         user_id: currentUser.id,
         name: document.getElementById('habit-name').value,
         description: document.getElementById('habit-description').value,
-        points_per_completion: parseInt(document.getElementById('habit-points').value)
+        points_per_completion: parseInt(document.getElementById('habit-points').value),
+        reward_description: document.getElementById('habit-reward').value
     };
     
     try {
@@ -407,6 +553,7 @@ async function updateProfile() {
         
         currentUser.username = profileData.username;
         currentUser.email = profileData.email;
+        updateUserDisplay();
         
         showNotification('Perfil atualizado com sucesso!', 'success');
     } catch (error) {
@@ -415,8 +562,19 @@ async function updateProfile() {
 }
 
 // Event listeners
-document.getElementById('search-input').addEventListener('input', debounce(loadRanking, 500));
-document.getElementById('sort-select').addEventListener('change', loadRanking);
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners for search and sort
+    const searchInput = document.getElementById('search-input');
+    const sortSelect = document.getElementById('sort-select');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(loadRanking, 500));
+    }
+    
+    if (sortSelect) {
+        sortSelect.addEventListener('change', loadRanking);
+    }
+});
 
 // Utility functions
 function debounce(func, wait) {
