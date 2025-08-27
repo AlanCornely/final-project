@@ -30,7 +30,7 @@ A aplicação agora funciona em **modo demo** sem necessidade de:
 - **Editar** hábitos existentes
 - **Excluir** hábitos
 - **Marcar** como completado
-- **Definir** recompensas e pontos
+- **Definir** recompensas
 
 ### 🏆 Sistema de Pontos e Badges
 - Ganhe pontos por completar hábitos
@@ -161,4 +161,5 @@ Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes
 ---
 
 **🎉 Agora você pode usar a aplicação Healthy Habits imediatamente, sem configuração!**
+
 
