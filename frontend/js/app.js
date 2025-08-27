@@ -1,6 +1,11 @@
 // Configuration
 const API_BASE_URL = 'http://localhost:8000/api';
-let currentUser = null;
+let currentUser = {
+    id: 1,
+    username: 'Usuário Demo',
+    email: 'demo@healthyhabits.com',
+    total_points: 0
+};
 
 // State management
 let appState = {
@@ -14,125 +19,57 @@ let appState = {
 // Initialize the application
 async function initializeApp() {
     try {
-        // Check if user is authenticated
-        const authCheck = await checkAuthentication();
-        if (authCheck.authenticated) {
-            currentUser = authCheck.user;
-            showMainApp();
-            await loadUserData();
-            await loadHabits();
-            await loadBadges();
-            showSection('dashboard');
-            updateDashboard();
-        } else {
-            showAuthSection();
-        }
+        // Skip authentication and go directly to main app
+        showMainApp();
+        await loadUserData();
+        await loadHabits();
+        await loadBadges();
+        showSection('dashboard');
+        updateDashboard();
     } catch (error) {
         console.error('Error initializing app:', error);
-        showAuthSection();
+        showMainApp(); // Still show main app even if there's an error
     }
 }
 
-// Authentication functions
+// Authentication functions - Simplified for demo mode
 async function checkAuthentication() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth.php?action=check`, {
-            credentials: 'include'
-        });
-        return await response.json();
-    } catch (error) {
-        console.error('Auth check error:', error);
-        return { authenticated: false };
-    }
+    // Return authenticated by default for demo mode
+    return { 
+        authenticated: true, 
+        user: currentUser 
+    };
 }
 
 async function login(event) {
     event.preventDefault();
     
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth.php?action=login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ username, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            currentUser = data.user;
-            showNotification('Login realizado com sucesso!', 'success');
-            showMainApp();
-            await loadUserData();
-            await loadHabits();
-            await loadBadges();
-            showSection('dashboard');
-            updateDashboard();
-        } else {
-            showNotification(data.error || 'Erro no login', 'error');
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        showNotification('Erro ao fazer login', 'error');
-    }
+    // For demo mode, just show success and continue
+    showNotification('Modo demo ativado!', 'success');
+    showMainApp();
+    await loadUserData();
+    await loadHabits();
+    await loadBadges();
+    showSection('dashboard');
+    updateDashboard();
 }
 
 async function register(event) {
     event.preventDefault();
     
-    const username = document.getElementById('register-username').value;
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth.php?action=register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ username, email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            currentUser = data.user;
-            showNotification('Conta criada com sucesso!', 'success');
-            showMainApp();
-            await loadUserData();
-            await loadHabits();
-            await loadBadges();
-            showSection('dashboard');
-            updateDashboard();
-        } else {
-            showNotification(data.error || 'Erro ao criar conta', 'error');
-        }
-    } catch (error) {
-        console.error('Register error:', error);
-        showNotification('Erro ao criar conta', 'error');
-    }
+    // For demo mode, just show success and continue
+    showNotification('Modo demo ativado!', 'success');
+    showMainApp();
+    await loadUserData();
+    await loadHabits();
+    await loadBadges();
+    showSection('dashboard');
+    updateDashboard();
 }
 
 async function logout() {
-    try {
-        await fetch(`${API_BASE_URL}/auth.php?action=logout`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-        
-        currentUser = null;
-        showNotification('Logout realizado com sucesso!', 'success');
-        showAuthSection();
-    } catch (error) {
-        console.error('Logout error:', error);
-        showNotification('Erro ao fazer logout', 'error');
-    }
+    // For demo mode, just show notification
+    showNotification('Modo demo - logout não disponível', 'info');
 }
 
 // UI Functions
@@ -197,34 +134,142 @@ function updateDashboard() {
     renderRecentActivity();
 }
 
-// API Functions
+// API Functions - Demo mode with mock data
 async function apiRequest(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const config = {
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
-        },
-        credentials: 'include',
-        ...options
-    };
-
-    try {
-        const response = await fetch(url, config);
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'Erro na requisição');
-        }
-        
-        return data;
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
+    // For demo mode, return mock data instead of making API calls
+    console.log('Demo mode: Mocking API request to', endpoint);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Return mock data based on endpoint
+    if (endpoint.includes('/users.php')) {
+        return {
+            id: currentUser.id,
+            username: currentUser.username,
+            email: currentUser.email,
+            total_points: currentUser.total_points
+        };
+    } else if (endpoint.includes('/habits.php')) {
+        return getMockHabits();
+    } else if (endpoint.includes('/badges.php')) {
+        return getMockBadges();
+    } else if (endpoint.includes('/ranking.php')) {
+        return {
+            ranking: getMockRanking()
+        };
+    } else if (endpoint.includes('/completions.php') && options.method === 'POST') {
+        // Simulate completion
+        const points = Math.floor(Math.random() * 20) + 10;
+        currentUser.total_points += points;
+        return {
+            points_earned: points,
+            message: 'Hábito completado com sucesso!'
+        };
     }
+    
+    return { success: true };
 }
 
-// Data loading functions
+// Mock data functions
+function getMockHabits() {
+    return [
+        {
+            id: 1,
+            user_id: currentUser.id,
+            name: 'Beber 2L de água',
+            description: 'Manter-se hidratado bebendo pelo menos 2 litros de água por dia',
+            points_per_completion: 10,
+            reward_description: 'Pele mais saudável e energia renovada',
+            total_completions: 5
+        },
+        {
+            id: 2,
+            user_id: currentUser.id,
+            name: 'Exercitar-se 30min',
+            description: 'Fazer pelo menos 30 minutos de exercício físico',
+            points_per_completion: 15,
+            reward_description: 'Endorfina e bem-estar',
+            total_completions: 3
+        },
+        {
+            id: 3,
+            user_id: currentUser.id,
+            name: 'Meditar 10min',
+            description: 'Praticar meditação por 10 minutos',
+            points_per_completion: 12,
+            reward_description: 'Paz mental e clareza',
+            total_completions: 7
+        },
+        {
+            id: 4,
+            user_id: currentUser.id,
+            name: 'Caminhar 10.000 passos',
+            description: 'Atingir a meta de 10.000 passos por dia',
+            points_per_completion: 20,
+            reward_description: 'Saúde cardiovascular',
+            total_completions: 2
+        }
+    ];
+}
+
+function getMockBadges() {
+    return [
+        {
+            id: 1,
+            name: 'Iniciante',
+            description: 'Primeiros passos na jornada saudável',
+            points_threshold: 0
+        },
+        {
+            id: 2,
+            name: 'Dedicado',
+            description: 'Alcançou 50 pontos',
+            points_threshold: 50
+        },
+        {
+            id: 3,
+            name: 'Persistente',
+            description: 'Alcançou 100 pontos',
+            points_threshold: 100
+        }
+    ];
+}
+
+function getMockRanking() {
+    return [
+        {
+            position: 1,
+            username: 'João Silva',
+            points: 850,
+            badges_count: 5,
+            completions_count: 45
+        },
+        {
+            position: 2,
+            username: 'Maria Santos',
+            points: 720,
+            badges_count: 4,
+            completions_count: 38
+        },
+        {
+            position: 3,
+            username: 'Pedro Costa',
+            points: 650,
+            badges_count: 3,
+            completions_count: 32
+        },
+        {
+            position: 4,
+            username: currentUser.username,
+            points: currentUser.total_points,
+            badges_count: 2,
+            completions_count: 15
+        }
+    ];
+}
+
+// Data loading functions - Demo mode
 async function loadUserData() {
     try {
         const userData = await apiRequest(`/users.php?id=${currentUser.id}`);
@@ -232,6 +277,8 @@ async function loadUserData() {
         document.getElementById('user-points').textContent = userData.total_points || 0;
     } catch (error) {
         console.error('Error loading user data:', error);
+        // Fallback to current user data
+        document.getElementById('user-points').textContent = currentUser.total_points || 0;
     }
 }
 
@@ -242,6 +289,9 @@ async function loadHabits() {
         renderHabits();
     } catch (error) {
         console.error('Error loading habits:', error);
+        // Use mock data as fallback
+        appState.habits = getMockHabits();
+        renderHabits();
     }
 }
 
@@ -252,6 +302,9 @@ async function loadBadges() {
         renderBadges();
     } catch (error) {
         console.error('Error loading badges:', error);
+        // Use mock data as fallback
+        appState.badges = getMockBadges();
+        renderBadges();
     }
 }
 
@@ -260,21 +313,34 @@ async function loadRanking() {
         const searchTerm = document.getElementById('search-input').value;
         const sortBy = document.getElementById('sort-select').value;
         
-        const params = new URLSearchParams({
-            order_by: sortBy,
-            order_dir: 'DESC',
-            limit: 20
-        });
+        // Get mock ranking data
+        const rankingData = await apiRequest(`/ranking.php`);
+        appState.ranking = rankingData.ranking;
         
+        // Apply search filter if provided
         if (searchTerm) {
-            params.append('search', searchTerm);
+            appState.ranking = appState.ranking.filter(user => 
+                user.username.toLowerCase().includes(searchTerm.toLowerCase())
+            );
         }
         
-        const rankingData = await apiRequest(`/ranking.php?${params}`);
-        appState.ranking = rankingData.ranking;
+        // Apply sorting
+        appState.ranking.sort((a, b) => {
+            if (sortBy === 'points') {
+                return b.points - a.points;
+            } else if (sortBy === 'badges') {
+                return b.badges_count - a.badges_count;
+            } else {
+                return b.completions_count - a.completions_count;
+            }
+        });
+        
         renderRanking();
     } catch (error) {
         console.error('Error loading ranking:', error);
+        // Use mock data as fallback
+        appState.ranking = getMockRanking();
+        renderRanking();
     }
 }
 
@@ -463,7 +529,7 @@ function hideAddHabitModal() {
     document.getElementById('habit-reward').value = '';
 }
 
-// CRUD operations
+// CRUD operations - Demo mode
 async function addHabit(event) {
     event.preventDefault();
     
@@ -475,38 +541,31 @@ async function addHabit(event) {
         reward_description: document.getElementById('habit-reward').value
     };
     
-    try {
-        await apiRequest('/habits.php', {
-            method: 'POST',
-            body: JSON.stringify(habitData)
-        });
-        
-        showNotification('Hábito criado com sucesso!', 'success');
-        hideAddHabitModal();
-        await loadHabits();
-        updateDashboard();
-    } catch (error) {
-        showNotification('Erro ao criar hábito: ' + error.message, 'error');
-    }
+    // Add to mock data
+    const newHabit = {
+        id: Date.now(), // Use timestamp as ID
+        ...habitData,
+        total_completions: 0
+    };
+    
+    appState.habits.push(newHabit);
+    
+    showNotification('Hábito criado com sucesso! (Modo demo)', 'success');
+    hideAddHabitModal();
+    renderHabits();
+    updateDashboard();
 }
 
 async function completeHabit(habitId) {
-    try {
-        const response = await apiRequest('/completions.php', {
-            method: 'POST',
-            body: JSON.stringify({
-                habit_id: habitId,
-                user_id: currentUser.id
-            })
-        });
+    // Find the habit and update its completion count
+    const habit = appState.habits.find(h => h.id === habitId);
+    if (habit) {
+        habit.total_completions++;
+        currentUser.total_points += habit.points_per_completion;
         
-        showNotification(`Parabéns! +${response.points_earned} pontos!`, 'success');
-        await loadUserData();
-        await loadHabits();
-        await loadBadges();
+        showNotification(`Parabéns! +${habit.points_per_completion} pontos! (Modo demo)`, 'success');
+        renderHabits();
         updateDashboard();
-    } catch (error) {
-        showNotification('Erro ao completar hábito: ' + error.message, 'error');
     }
 }
 
@@ -515,17 +574,12 @@ async function deleteHabit(habitId) {
         return;
     }
     
-    try {
-        await apiRequest(`/habits.php?id=${habitId}`, {
-            method: 'DELETE'
-        });
-        
-        showNotification('Hábito excluído com sucesso!', 'success');
-        await loadHabits();
-        updateDashboard();
-    } catch (error) {
-        showNotification('Erro ao excluir hábito: ' + error.message, 'error');
-    }
+    // Remove from mock data
+    appState.habits = appState.habits.filter(h => h.id !== habitId);
+    
+    showNotification('Hábito excluído com sucesso! (Modo demo)', 'success');
+    renderHabits();
+    updateDashboard();
 }
 
 function editHabit(habitId) {
@@ -545,20 +599,12 @@ async function updateProfile() {
         email: document.getElementById('profile-email').value
     };
     
-    try {
-        await apiRequest('/users.php', {
-            method: 'PUT',
-            body: JSON.stringify(profileData)
-        });
-        
-        currentUser.username = profileData.username;
-        currentUser.email = profileData.email;
-        updateUserDisplay();
-        
-        showNotification('Perfil atualizado com sucesso!', 'success');
-    } catch (error) {
-        showNotification('Erro ao atualizar perfil: ' + error.message, 'error');
-    }
+    // Update current user data in demo mode
+    currentUser.username = profileData.username;
+    currentUser.email = profileData.email;
+    updateUserDisplay();
+    
+    showNotification('Perfil atualizado com sucesso! (Modo demo)', 'success');
 }
 
 // Event listeners

@@ -235,3 +235,5 @@ Se ainda houver problemas, verifique:
 2. Console do navegador
 3. Network tab do navegador
 4. Mensagens de erro específicas
+
+
