@@ -179,36 +179,48 @@ function getMockHabits() {
             user_id: currentUser.id,
             name: 'Beber 2L de água',
             description: 'Manter-se hidratado bebendo pelo menos 2 litros de água por dia',
-            points_per_completion: 10,
+            points_per_completion: 50,
             reward_description: 'Pele mais saudável e energia renovada',
-            total_completions: 5
+            total_completions: 2,
+            duration: 5,
+            current_completions: 2,
+            is_completed: false
         },
         {
             id: 2,
             user_id: currentUser.id,
             name: 'Exercitar-se 30min',
             description: 'Fazer pelo menos 30 minutos de exercício físico',
-            points_per_completion: 15,
+            points_per_completion: 50,
             reward_description: 'Endorfina e bem-estar',
-            total_completions: 3
+            total_completions: 1,
+            duration: 3,
+            current_completions: 1,
+            is_completed: false
         },
         {
             id: 3,
             user_id: currentUser.id,
             name: 'Meditar 10min',
             description: 'Praticar meditação por 10 minutos',
-            points_per_completion: 12,
+            points_per_completion: 50,
             reward_description: 'Paz mental e clareza',
-            total_completions: 7
+            total_completions: 0,
+            duration: 'indefinido',
+            current_completions: 0,
+            is_completed: false
         },
         {
             id: 4,
             user_id: currentUser.id,
             name: 'Caminhar 10.000 passos',
             description: 'Atingir a meta de 10.000 passos por dia',
-            points_per_completion: 20,
+            points_per_completion: 50,
             reward_description: 'Saúde cardiovascular',
-            total_completions: 2
+            total_completions: 0,
+            duration: 7,
+            current_completions: 0,
+            is_completed: false
         }
     ];
 }
@@ -362,49 +374,89 @@ function renderHabits() {
         return;
     }
     
-    habitsGrid.innerHTML = appState.habits.map(habit => `
-        <div class="bg-white rounded-xl shadow-md p-6 card-hover">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">${habit.name}</h3>
-                <div class="flex space-x-2">
-                    <button onclick="editHabit(${habit.id})" class="text-gray-400 hover:text-gray-600">
-                        <i data-lucide="edit-2" class="h-4 w-4"></i>
-                    </button>
-                    <button onclick="deleteHabit(${habit.id})" class="text-gray-400 hover:text-red-600">
-                        <i data-lucide="trash-2" class="h-4 w-4"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <p class="text-gray-600 text-sm mb-4">${habit.description || 'Sem descrição'}</p>
-            
-            ${habit.reward_description ? `
-                <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div class="flex items-center">
-                        <i data-lucide="gift" class="h-4 w-4 text-yellow-600 mr-2"></i>
-                        <span class="text-sm text-yellow-800 font-medium">Recompensa:</span>
+    habitsGrid.innerHTML = appState.habits.map(habit => {
+        const isCompleted = habit.is_completed;
+        const durationText = habit.duration === 'indefinido' ? 'Indefinido' : `${habit.duration} vezes`;
+        const progressText = habit.duration === 'indefinido' ? 
+            `${habit.current_completions} vezes completadas` : 
+            `${habit.current_completions}/${habit.duration} vezes`;
+        
+        return `
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover ${isCompleted ? 'opacity-75' : ''}">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">${habit.name}</h3>
+                    <div class="flex space-x-2">
+                        ${!isCompleted ? `
+                            <button onclick="editHabit(${habit.id})" class="text-gray-400 hover:text-gray-600">
+                                <i data-lucide="edit-2" class="h-4 w-4"></i>
+                            </button>
+                        ` : ''}
+                        <button onclick="deleteHabit(${habit.id})" class="text-gray-400 hover:text-red-600">
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
                     </div>
-                    <p class="text-sm text-yellow-700 mt-1">${habit.reward_description}</p>
                 </div>
-            ` : ''}
-            
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-sm text-gray-500">
-                    <i data-lucide="star" class="h-4 w-4 inline mr-1"></i>
-                    ${habit.points_per_completion} pontos
-                </span>
-                <span class="text-sm text-gray-500">
-                    <i data-lucide="check-circle" class="h-4 w-4 inline mr-1"></i>
-                    ${habit.total_completions || 0} vezes
-                </span>
+                
+                <p class="text-gray-600 text-sm mb-4">${habit.description || 'Sem descrição'}</p>
+                
+                <!-- Duração e Progresso -->
+                <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i data-lucide="clock" class="h-4 w-4 text-blue-600 mr-2"></i>
+                            <span class="text-sm text-blue-800 font-medium">Duração:</span>
+                            <span class="text-sm text-blue-700 ml-1">${durationText}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="bar-chart-3" class="h-4 w-4 text-blue-600 mr-2"></i>
+                            <span class="text-sm text-blue-800 font-medium">Progresso:</span>
+                            <span class="text-sm text-blue-700 ml-1">${progressText}</span>
+                        </div>
+                    </div>
+                    ${habit.duration !== 'indefinido' ? `
+                        <div class="mt-2">
+                            <div class="w-full bg-blue-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: ${(habit.current_completions / habit.duration) * 100}%"></div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                ${habit.reward_description ? `
+                    <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <div class="flex items-center">
+                            <i data-lucide="gift" class="h-4 w-4 text-yellow-600 mr-2"></i>
+                            <span class="text-sm text-yellow-800 font-medium">Recompensa:</span>
+                        </div>
+                        <p class="text-sm text-yellow-700 mt-1">${habit.reward_description}</p>
+                    </div>
+                ` : ''}
+                
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-sm text-gray-500">
+                        <i data-lucide="star" class="h-4 w-4 inline mr-1"></i>
+                        ${habit.points_per_completion} pontos
+                    </span>
+                    <span class="text-sm text-gray-500">
+                        <i data-lucide="check-circle" class="h-4 w-4 inline mr-1"></i>
+                        ${habit.total_completions || 0} vezes
+                    </span>
+                </div>
+                
+                ${isCompleted ? `
+                    <div class="w-full bg-green-100 text-green-800 py-2 px-4 rounded-lg flex items-center justify-center">
+                        <i data-lucide="check-circle" class="h-4 w-4 mr-2"></i>
+                        Tarefa Concluída!
+                    </div>
+                ` : `
+                    <button onclick="completeHabit(${habit.id})" class="w-full bg-success-600 hover:bg-success-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                        <i data-lucide="check" class="h-4 w-4 mr-2"></i>
+                        Marcar como Concluído
+                    </button>
+                `}
             </div>
-            
-            <button onclick="completeHabit(${habit.id})" class="w-full bg-success-600 hover:bg-success-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
-                <i data-lucide="check" class="h-4 w-4 mr-2"></i>
-                Marcar como Concluído
-            </button>
-        </div>
-    `).join('');
+        `;
+    }).join('');
     
     // Re-initialize Lucide icons
     lucide.createIcons();
@@ -525,7 +577,8 @@ function hideAddHabitModal() {
     // Reset form
     document.getElementById('habit-name').value = '';
     document.getElementById('habit-description').value = '';
-    document.getElementById('habit-points').value = '10';
+    document.getElementById('habit-points').value = '50';
+    document.getElementById('habit-duration').value = '';
     document.getElementById('habit-reward').value = '';
 }
 
@@ -537,15 +590,18 @@ async function addHabit(event) {
         user_id: currentUser.id,
         name: document.getElementById('habit-name').value,
         description: document.getElementById('habit-description').value,
-        points_per_completion: parseInt(document.getElementById('habit-points').value),
-        reward_description: document.getElementById('habit-reward').value
+        points_per_completion: 50, // Fixed at 50 points
+        reward_description: document.getElementById('habit-reward').value,
+        duration: document.getElementById('habit-duration').value
     };
     
     // Add to mock data
     const newHabit = {
         id: Date.now(), // Use timestamp as ID
         ...habitData,
-        total_completions: 0
+        total_completions: 0,
+        current_completions: 0,
+        is_completed: false
     };
     
     appState.habits.push(newHabit);
@@ -559,18 +615,33 @@ async function addHabit(event) {
 async function completeHabit(habitId) {
     // Find the habit and update its completion count
     const habit = appState.habits.find(h => h.id === habitId);
-    if (habit) {
+    if (habit && !habit.is_completed) {
+        habit.current_completions++;
         habit.total_completions++;
         currentUser.total_points += habit.points_per_completion;
         
-        showNotification(`Parabéns! +${habit.points_per_completion} pontos! (Modo demo)`, 'success');
+        // Check if habit is completed based on duration
+        if (habit.duration !== 'indefinido' && habit.current_completions >= habit.duration) {
+            habit.is_completed = true;
+            showNotification(`🎉 Tarefa "${habit.name}" concluída! +${habit.points_per_completion} pontos! (Modo demo)`, 'success');
+            // Schedule auto-cleanup after 24 hours
+            scheduleHabitCleanup(habit.id);
+        } else {
+            showNotification(`Parabéns! +${habit.points_per_completion} pontos! (Modo demo)`, 'success');
+        }
+        
         renderHabits();
         updateDashboard();
     }
 }
 
 async function deleteHabit(habitId) {
-    if (!confirm('Tem certeza que deseja excluir este hábito?')) {
+    const habit = appState.habits.find(h => h.id === habitId);
+    const message = habit && habit.is_completed ? 
+        'Tem certeza que deseja excluir esta tarefa concluída?' : 
+        'Tem certeza que deseja excluir este hábito?';
+    
+    if (!confirm(message)) {
         return;
     }
     
@@ -583,8 +654,51 @@ async function deleteHabit(habitId) {
 }
 
 function editHabit(habitId) {
-    // TODO: Implement edit functionality
-    showNotification('Funcionalidade de edição em desenvolvimento', 'info');
+    const habit = appState.habits.find(h => h.id === habitId);
+    if (habit) {
+        // Populate the edit form
+        document.getElementById('edit-habit-id').value = habit.id;
+        document.getElementById('edit-habit-name').value = habit.name;
+        document.getElementById('edit-habit-description').value = habit.description || '';
+        document.getElementById('edit-habit-reward').value = habit.reward_description || '';
+        document.getElementById('edit-habit-duration').value = habit.duration;
+        
+        // Show the edit modal
+        document.getElementById('edit-habit-modal').classList.remove('hidden');
+        document.getElementById('edit-habit-modal').classList.add('flex');
+    }
+}
+
+async function updateHabit(event) {
+    event.preventDefault();
+    
+    const habitId = parseInt(document.getElementById('edit-habit-id').value);
+    const habit = appState.habits.find(h => h.id === habitId);
+    
+    if (habit) {
+        // Update habit data
+        habit.name = document.getElementById('edit-habit-name').value;
+        habit.description = document.getElementById('edit-habit-description').value;
+        habit.reward_description = document.getElementById('edit-habit-reward').value;
+        habit.duration = document.getElementById('edit-habit-duration').value;
+        
+        showNotification('Hábito atualizado com sucesso! (Modo demo)', 'success');
+        hideEditHabitModal();
+        renderHabits();
+        updateDashboard();
+    }
+}
+
+function hideEditHabitModal() {
+    document.getElementById('edit-habit-modal').classList.add('hidden');
+    document.getElementById('edit-habit-modal').classList.remove('flex');
+    
+    // Reset form
+    document.getElementById('edit-habit-id').value = '';
+    document.getElementById('edit-habit-name').value = '';
+    document.getElementById('edit-habit-description').value = '';
+    document.getElementById('edit-habit-reward').value = '';
+    document.getElementById('edit-habit-duration').value = '';
 }
 
 function loadProfile() {
@@ -633,6 +747,19 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// Auto-cleanup completed habits after 24 hours
+function scheduleHabitCleanup(habitId) {
+    setTimeout(() => {
+        const habit = appState.habits.find(h => h.id === habitId);
+        if (habit && habit.is_completed) {
+            appState.habits = appState.habits.filter(h => h.id !== habitId);
+            renderHabits();
+            updateDashboard();
+            showNotification(`Tarefa "${habit.name}" removida automaticamente após 24 horas`, 'info');
+        }
+    }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
 }
 
 function showNotification(message, type = 'info') {

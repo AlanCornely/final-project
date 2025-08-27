@@ -346,7 +346,24 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Pontos por Conclusão</label>
-                            <input type="number" id="habit-points" value="10" min="1" max="100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                            <input type="number" id="habit-points" value="50" min="50" max="50" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600">
+                            <p class="text-xs text-gray-500 mt-1">Pontos fixos em 50 por tarefa</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Duração da Tarefa</label>
+                            <select id="habit-duration" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                                <option value="">Selecione a duração</option>
+                                <option value="1">1 vez</option>
+                                <option value="2">2 vezes</option>
+                                <option value="3">3 vezes</option>
+                                <option value="4">4 vezes</option>
+                                <option value="5">5 vezes</option>
+                                <option value="6">6 vezes</option>
+                                <option value="7">7 vezes</option>
+                                <option value="8">8 vezes</option>
+                                <option value="9">9 vezes</option>
+                                <option value="indefinido">Indefinido (conclusão manual)</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Recompensa (Opcional)</label>
@@ -359,6 +376,64 @@
                         </button>
                         <button type="submit" class="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
                             Criar Hábito
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Habit Modal -->
+        <div id="edit-habit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Editar Hábito</h3>
+                    <button onclick="hideEditHabitModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="h-6 w-6"></i>
+                    </button>
+                </div>
+                <form onsubmit="updateHabit(event)">
+                    <input type="hidden" id="edit-habit-id">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nome do Hábito</label>
+                            <input type="text" id="edit-habit-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Descrição</label>
+                            <textarea id="edit-habit-description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Pontos por Conclusão</label>
+                            <input type="number" id="edit-habit-points" value="50" min="50" max="50" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600">
+                            <p class="text-xs text-gray-500 mt-1">Pontos fixos em 50 por tarefa</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Duração da Tarefa</label>
+                            <select id="edit-habit-duration" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                                <option value="">Selecione a duração</option>
+                                <option value="1">1 vez</option>
+                                <option value="2">2 vezes</option>
+                                <option value="3">3 vezes</option>
+                                <option value="4">4 vezes</option>
+                                <option value="5">5 vezes</option>
+                                <option value="6">6 vezes</option>
+                                <option value="7">7 vezes</option>
+                                <option value="8">8 vezes</option>
+                                <option value="9">9 vezes</option>
+                                <option value="indefinido">Indefinido (conclusão manual)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Recompensa (Opcional)</label>
+                            <textarea id="edit-habit-reward" rows="2" placeholder="Ex: Assistir um episódio da série favorita" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex space-x-3">
+                        <button type="button" onclick="hideEditHabitModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Atualizar Hábito
                         </button>
                     </div>
                 </form>
